@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs';
 export const readInput = (filePath: string): string => {
-  const input = readFileSync(filePath).toString();
-  return input;
+  return readFileSync(filePath).toString();
 };
 
 export const splitLines = (input: string): string[] => {
