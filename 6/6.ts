@@ -1,18 +1,5 @@
 import { readInput } from '../utils';
 
-const checkPossibleTimes = (time: number, record: number) => {
-  let possibleRecordBreaks = 0;
-
-  for (let timePreparing = 1; timePreparing < time; timePreparing++) {
-    let result = (time - timePreparing) * timePreparing;
-    if (result > record) {
-      possibleRecordBreaks++;
-    }
-  }
-
-  return possibleRecordBreaks;
-};
-
 const firstPart = () => {
   const input = readInput('6/input');
   const lines = input.split('\n');
@@ -34,16 +21,27 @@ const firstPart = () => {
     const time = times[race];
     const record = distances[race];
 
-    total *= checkPossibleTimes(time, record);
+    const [lowerLimit, upperLimit] = solveEquation(time, record);
+    console.log(lowerLimit, upperLimit);
+    total *= upperLimit - lowerLimit + 1;
   }
 
   return total;
 };
 
+const solveEquation = (time: number, record: number): number[] => {
+  let lowerLimit = (time - Math.sqrt(Math.pow(time, 2) - 4 * record)) / 2;
+  let upperLimit = (time + Math.sqrt(Math.pow(time, 2) - 4 * record)) / 2;
+
+  if (Number.isInteger(lowerLimit)) lowerLimit = ++lowerLimit;
+  if (Number.isInteger(upperLimit)) upperLimit = ++upperLimit;
+
+  return [Math.ceil(lowerLimit), Math.floor(upperLimit)];
+};
+
 const secondPart = () => {
   const input = readInput('6/input');
   const lines = input.split('\n');
-  let total = 1;
 
   const time: number = +lines[0]
     .split(':')[1]
@@ -57,9 +55,8 @@ const secondPart = () => {
     .filter((v) => v)
     .join('');
 
-  total = checkPossibleTimes(time, record);
-
-  return total;
+  const [lowerLimit, upperLimit] = solveEquation(time, record);
+  return upperLimit - lowerLimit + 1;
 };
 
 console.log(firstPart());
