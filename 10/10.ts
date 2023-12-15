@@ -13,6 +13,7 @@ const pipes: Record<string, string[]> = {
 let matrix: string[][] = [];
 let matrixColLen: number = 0;
 let matrixRowLen: number = 0;
+let startNewPipe = '';
 
 const moveCardinalDirection = (
   row: number,
@@ -53,36 +54,57 @@ const findNextPosition = (
 
 const findFirstMove = (row: number, col: number): Array<number | string> => {
   const possibleMoves = {
-    N: ['|', 'L', 'J'],
-    E: ['-', 'L', 'F'],
-    S: ['|', '7', 'F'],
-    W: ['-', 'J', '7'],
+    south: ['|', 'J', 'L'],
+    north: ['|', 'F', '7'],
+    east: ['-', 'J', '7'],
   };
 
-  if (possibleMoves['N'].includes(matrix[row - 1][col])) {
-    return [row - 1, col, 'N'];
+  if (row - 1 >= 0) {
+    if (possibleMoves.north.includes(matrix[row - 1][col])) {
+      return [row - 1, col, 'N'];
+    }
   }
 
-  if (possibleMoves['E'].includes(matrix[row][col + 1])) {
-    return [row, col + 1, 'E'];
+  if (col + 1 < matrix[0].length) {
+    if (possibleMoves.east.includes(matrix[row][col + 1])) {
+      return [row, col + 1, 'E'];
+    }
   }
 
-  if (possibleMoves['S'].includes(matrix[row + 1][col])) {
-    return [row + 1, col, 'S'];
+  if (row + 1 < matrix.length) {
+    if (possibleMoves.south.includes(matrix[row + 1][col])) {
+      return [row + 1, col, 'S'];
+    }
   }
 
   return [row, col - 1, 'W'];
+};
+
+const replaceStartPosition = (
+  startDirections: string[],
+  startRow: number,
+  startCol: number
+) => {
+  for (const [key, value] of Object.entries(pipes)) {
+    if (
+      (value[0] == startDirections[0] || value[0] == startDirections[1]) &&
+      (value[1] == startDirections[0] || value[1] == startDirections[1])
+    ) {
+      matrix[startRow][startCol] = key;
+    }
+  }
 };
 
 const searchPath = (startPosition: number[]): number[][] => {
   let startRow = startPosition[0];
   let startCol = startPosition[1];
   let path: number[][] = [[startRow, startCol]];
+  let startDirections = [];
 
   let [currentRow, currentCol, origin] = findFirstMove(startRow, startCol);
+  startDirections.push(origin as string);
 
   while (matrix[currentRow as number][currentCol as number] !== 'S') {
-    console.log(currentRow, currentCol);
     path.push([currentRow as number, currentCol as number]);
 
     [currentRow, currentCol, origin] = findNextPosition(
@@ -91,33 +113,35 @@ const searchPath = (startPosition: number[]): number[][] => {
       origin as string
     );
   }
+
+  startDirections.push(getOpositeDirection(origin as string));
+  replaceStartPosition(startDirections, startRow, startCol);
+
   return path;
 };
 
 const countInnerLoop = (path: number[][]) => {
   let innerLoopCount = 0;
+  let stringifiedPath = JSON.stringify(path);
 
-  for (let i = 0; i < matrix.length; i++) {
-    let pathInThisRow = path
-      .filter((el) => el[0] == i)
-      .map((el) => el[1])
-      .sort((a, b) => a - b);
-    // console.log(pathInThisRow);
+  for (let row = 0; row < matrix.length; row++) {
+    for (let col = 0; col < matrix[0].length; col++) {
+      if (stringifiedPath.includes(JSON.stringify([row, col]))) continue;
+      let intersections = 0;
 
-    if (pathInThisRow.length == 0) continue;
+      for (let checkCol = col + 1; checkCol < matrix[0].length; checkCol++) {
+        if (
+          ['|', 'J', 'L'].includes(matrix[row][checkCol]) &&
+          stringifiedPath.includes(JSON.stringify([row, checkCol]))
+        ) {
+          intersections = ++intersections;
+        }
+      }
 
-    if (pathInThisRow.length == 2) {
-      innerLoopCount += pathInThisRow[1] - pathInThisRow[0] - 1;
-      continue;
-    }
-
-    for (let j = 0; j < pathInThisRow.length; j = j + 2) {
-      if (pathInThisRow[j + 1] == undefined) continue;
-      if (pathInThisRow[j] + 1 == pathInThisRow[j + 1]) continue;
-      // console.log(pathInThisRow[j], pathInThisRow[j + 1]);
-      innerLoopCount += pathInThisRow[j + 1] - pathInThisRow[j] - 1;
+      innerLoopCount += intersections % 2 ? 1 : 0;
     }
   }
+
   return innerLoopCount;
 };
 
@@ -130,8 +154,8 @@ const main = () => {
   const startCol = matrix[startRow].indexOf('S');
 
   const path = searchPath([startRow, startCol]);
-  // console.log(path.length / 2);
-  // console.log(countInnerLoop(path));
+  console.log(path.length / 2);
+  console.log(countInnerLoop(path));
 };
 
-console.log(main());
+main();
