@@ -1,4 +1,3 @@
-import { markAsUntransferable } from 'worker_threads';
 import { readInput, splitLines } from '../utils';
 
 const pipes: Record<string, string[]> = {
@@ -13,7 +12,6 @@ const pipes: Record<string, string[]> = {
 let matrix: string[][] = [];
 let matrixColLen: number = 0;
 let matrixRowLen: number = 0;
-let startNewPipe = '';
 
 const moveCardinalDirection = (
   row: number,
@@ -120,20 +118,28 @@ const searchPath = (startPosition: number[]): number[][] => {
   return path;
 };
 
-const countInnerLoop = (path: number[][]) => {
-  let innerLoopCount = 0;
+const clearUnusefulPipes = (path: number[][]) => {
   let stringifiedPath = JSON.stringify(path);
+  for (let row = 0; row < matrixRowLen; row++) {
+    for (let col = 0; col < matrixColLen; col++) {
+      if (matrix[row][col] == '.') continue;
+      if (!stringifiedPath.includes(JSON.stringify([row, col]))) {
+        matrix[row][col] = '.';
+      }
+    }
+  }
+};
+
+const countInnerLoop = () => {
+  let innerLoopCount = 0;
 
   for (let row = 0; row < matrix.length; row++) {
     for (let col = 0; col < matrix[0].length; col++) {
-      if (stringifiedPath.includes(JSON.stringify([row, col]))) continue;
+      if (matrix[row][col] !== '.') continue;
       let intersections = 0;
 
       for (let checkCol = col + 1; checkCol < matrix[0].length; checkCol++) {
-        if (
-          ['|', 'J', 'L'].includes(matrix[row][checkCol]) &&
-          stringifiedPath.includes(JSON.stringify([row, checkCol]))
-        ) {
+        if (['|', 'J', 'L'].includes(matrix[row][checkCol])) {
           intersections = ++intersections;
         }
       }
@@ -145,6 +151,10 @@ const countInnerLoop = (path: number[][]) => {
   return innerLoopCount;
 };
 
+const printMatrix = () => {
+  console.log(matrix.map((el) => el.join('')).join('\n'));
+};
+
 const main = () => {
   const input = readInput('10/input');
   matrix = [...splitLines(input).map((el) => el.split(''))];
@@ -154,8 +164,10 @@ const main = () => {
   const startCol = matrix[startRow].indexOf('S');
 
   const path = searchPath([startRow, startCol]);
+  clearUnusefulPipes(path);
+  printMatrix();
   console.log(path.length / 2);
-  console.log(countInnerLoop(path));
+  console.log(countInnerLoop());
 };
 
 main();
