@@ -75,7 +75,7 @@ const cycle = (matrix: string[][]): string[][] => {
   return targetMatrix;
 };
 
-const findLoop = (matrix: string[][]): any => {
+const findLoop = (matrix: string[][]): number[] => {
   let cycleCount = 0;
   let loopStartPos = 0;
   const seenMap = new Map();
@@ -128,5 +128,5 @@ const secondPart = () => {
   return countMatrix(matrix);
 };
 
-// console.log(firstPart());
+console.log(firstPart());
 console.log(secondPart());
