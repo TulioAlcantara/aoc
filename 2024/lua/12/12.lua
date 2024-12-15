@@ -1,4 +1,3 @@
-local dump = require("dump")
 local farm = {}
 local plants = {}
 
